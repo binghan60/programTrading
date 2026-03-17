@@ -18,4 +18,4 @@ app.include_router(backtest.router)
 
 @app.get("/")
 def root():
-    return {"status": "ok"}
+    return {"message": "Hello World"}
