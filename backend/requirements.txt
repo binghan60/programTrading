@@ -1,0 +1,6 @@
+shioaji
+fastapi
+uvicorn[standard]
+pandas
+python-dotenv
+python-dateutil
