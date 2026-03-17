@@ -1,7 +1,10 @@
 import axios from 'axios'
 
+const baseURL = import.meta.env.VITE_BACKEND_URL + import.meta.env.VITE_API_BASE
+console.log('[http] baseURL:', baseURL)
+
 const http = axios.create({
-  baseURL: import.meta.env.VITE_API_BASE,
+  baseURL,
   timeout: 30000,
 })
 
