@@ -69,40 +69,109 @@ onMounted(() => {
 
 <style scoped>
 .sidebar-tech-inner { width: 100%; height: 100%; display: flex; flex-direction: column; overflow: hidden; }
-.search-box-tech { padding: 15px 20px; border-bottom: 1px solid var(--border-color); background: rgba(0, 0, 0, 0.2); }
-.search-inner { display: flex; align-items: center; background: #0d1117; border: 1px solid var(--border-color); border-radius: 6px; padding: 4px 10px 4px 14px; transition: all 0.3s; }
-.search-inner:focus-within { border-color: var(--accent-cyan); box-shadow: 0 0 15px rgba(100, 181, 246, 0.1); }
-.search-icon { display: flex; align-items: center; color: var(--accent-cyan); margin-right: 12px; }
-.svg-icon-small { width: 16px; height: 16px; }
-.search-input-tech { width: 100%; background: none; border: none; color: var(--text-pri); padding: 10px 0; font-size: 14px; font-weight: 700; letter-spacing: 0.1em; outline: none; }
-.search-input-tech::placeholder { color: #4a5060; }
 
-.screener-btn { background: rgba(255, 255, 255, 0.05); border: 1px solid rgba(255, 255, 255, 0.1); border-radius: 4px; padding: 4px 8px; cursor: pointer; transition: all 0.2s; font-size: 16px; margin-left: 8px; }
-.screener-btn:hover { background: rgba(100, 181, 246, 0.1); border-color: var(--accent-cyan); }
-.screener-btn.active { background: var(--accent-cyan); border-color: var(--accent-cyan); box-shadow: 0 0 10px var(--accent-cyan); }
+/* ── 搜尋列 ─────────────────────────────────────────── */
+.search-box-tech {
+  padding: 14px 16px;
+  border-bottom: 1px solid var(--border-color);
+  background: linear-gradient(180deg, rgba(0,0,0,0.3) 0%, transparent 100%);
+}
+.search-inner {
+  display: flex; align-items: center;
+  background: rgba(0,0,0,0.35);
+  border: 1px solid var(--border-color);
+  border-radius: 8px; padding: 4px 10px 4px 14px;
+  transition: all 0.3s;
+}
+.search-inner:focus-within {
+  border-color: rgba(77,184,204,0.4);
+  background: rgba(77, 184, 204, 0.025);
+}
+.search-icon { display: flex; align-items: center; color: var(--accent-cyan); margin-right: 10px; opacity: 0.7; }
+.svg-icon-small { width: 15px; height: 15px; }
+.search-input-tech {
+  width: 100%; background: none; border: none; color: var(--text-pri);
+  padding: 9px 0; font-size: 15px; font-weight: 600;
+  letter-spacing: 0.08em; outline: none; font-family: 'JetBrains Mono', monospace;
+}
+.search-input-tech::placeholder { color: var(--text-dim); }
 
-.screening-status { background: rgba(100, 181, 246, 0.1); padding: 8px 20px; border-bottom: 1px solid rgba(100, 181, 246, 0.2); display: flex; justify-content: space-between; align-items: center; }
-.status-text { font-size: 12px; color: var(--accent-cyan); font-weight: 700; }
-.clear-screen-btn { background: none; border: none; color: var(--accent-cyan); cursor: pointer; font-size: 14px; opacity: 0.7; }
-.clear-screen-btn:hover { opacity: 1; }
+.screener-btn {
+  background: rgba(255,255,255,0.04); border: 1px solid var(--border-color);
+  border-radius: 6px; padding: 5px 8px; cursor: pointer;
+  transition: all 0.25s; font-size: 15px; margin-left: 8px; flex-shrink: 0;
+}
+.screener-btn:hover { background: rgba(77,184,204,0.08); border-color: rgba(77,184,204,0.3); }
+.screener-btn.active {
+  background: rgba(77,184,204,0.12); border-color: rgba(77,184,204,0.4);
+}
 
-.stock-list-tech { flex: 1; overflow-y: auto; list-style: none; scrollbar-width: thin; scrollbar-color: var(--accent-cyan) transparent; }
+/* ── 選股狀態列 ──────────────────────────────────────── */
+.screening-status {
+  background: rgba(0,212,255,0.06); padding: 8px 18px;
+  border-bottom: 1px solid rgba(0,212,255,0.15);
+  display: flex; justify-content: space-between; align-items: center;
+}
+.status-text { font-size: 11px; color: var(--accent-cyan); font-weight: 800; letter-spacing: 0.08em; text-transform: uppercase; }
+.clear-screen-btn {
+  background: none; border: none; color: var(--accent-cyan);
+  cursor: pointer; font-size: 13px; opacity: 0.6;
+  width: 22px; height: 22px; border-radius: 4px;
+  display: flex; align-items: center; justify-content: center;
+  transition: all 0.2s;
+}
+.clear-screen-btn:hover { opacity: 1; background: rgba(0,212,255,0.1); }
 
-/* RecycleScroller specific */
+/* ── 股票列表 ─────────────────────────────────────────── */
+.stock-list-tech { flex: 1; overflow-y: auto; list-style: none; }
 .scroller { height: 100%; }
 
-.stock-item-tech { display: flex; align-items: center; justify-content: space-between; padding: 16px 20px; height: 76px; cursor: pointer; border-bottom: 1px solid rgba(255, 255, 255, 0.03); position: relative; transition: all 0.2s; overflow: hidden; box-sizing: border-box; }
-.stock-info-main { display: flex; flex-direction: column; gap: 4px; z-index: 1; }
-.stock-code-tech { font-size: 18px; font-weight: 800; color: var(--text-pri); font-family: 'JetBrains Mono', monospace; }
-.stock-name-tech { font-size: 14px; color: var(--text-mut); font-weight: 500; }
-.stock-status-info { display: flex; flex-direction: column; align-items: flex-end; gap: 4px; z-index: 1; }
-.stock-ex-tech { font-size: 11px; color: var(--accent-blue); font-weight: 700; letter-spacing: 0.05em; }
-.data-badge { font-size: 10px; background: rgba(255, 255, 255, 0.05); color: #4a5060; padding: 1px 4px; border-radius: 3px; border: 1px solid rgba(255, 255, 255, 0.1); }
-.stock-item-tech.no-data { opacity: 0.6; }
+.stock-item-tech {
+  display: flex; align-items: center; justify-content: space-between;
+  padding: 14px 18px; height: 76px; cursor: pointer;
+  border-bottom: 1px solid rgba(255,255,255,0.025);
+  position: relative; transition: all 0.2s; overflow: hidden;
+  box-sizing: border-box;
+}
+.stock-item-tech::before {
+  content: ''; position: absolute; left: 0; top: 0; bottom: 0;
+  width: 2px; background: var(--accent-cyan); opacity: 0;
+  transition: opacity 0.2s;
+}
+.stock-item-tech:hover::before { opacity: 0.4; }
+.stock-item-tech:hover { background: rgba(0,212,255,0.03); }
 
-.stock-item-tech:hover { background: rgba(255, 255, 255, 0.03); }
-.stock-item-tech.active { background: rgba(100, 181, 246, 0.05); }
-.stock-item-tech.active::after { content: ''; position: absolute; right: 0; top: 0; bottom: 0; width: 3px; background: var(--accent-cyan); box-shadow: 0 0 15px var(--accent-cyan); }
-.stock-item-tech.active .stock-code-tech { color: var(--accent-cyan); text-shadow: 0 0 10px rgba(100, 181, 246, 0.4); }
-.no-result-tech, .loading-item { padding: 60px 20px; text-align: center; color: #4a5060; font-size: 14px; letter-spacing: 0.2em; font-weight: 700; }
+.stock-item-tech.active {
+  background: linear-gradient(90deg, rgba(0,212,255,0.07) 0%, transparent 100%);
+}
+.stock-item-tech.active::before { opacity: 0.6; }
+
+.stock-info-main { display: flex; flex-direction: column; gap: 3px; z-index: 1; }
+.stock-code-tech {
+  font-size: 18px; font-weight: 800;
+  color: var(--text-pri); font-family: 'JetBrains Mono', monospace;
+  transition: color 0.2s;
+}
+.stock-item-tech.active .stock-code-tech {
+  color: var(--accent-cyan);
+}
+.stock-name-tech { font-size: 14px; color: var(--text-mut); font-weight: 500; }
+
+.stock-status-info { display: flex; flex-direction: column; align-items: flex-end; gap: 4px; z-index: 1; }
+.stock-ex-tech {
+  font-size: 10px; color: var(--accent-blue); font-weight: 800;
+  letter-spacing: 0.1em; text-transform: uppercase;
+}
+.data-badge {
+  font-size: 9px; background: rgba(255,255,255,0.04); color: var(--text-dim);
+  padding: 2px 6px; border-radius: 4px; border: 1px solid var(--border-color);
+  letter-spacing: 0.05em;
+}
+.stock-item-tech.no-data { opacity: 0.5; }
+
+.no-result-tech, .loading-item {
+  padding: 60px 20px; text-align: center; color: var(--text-dim);
+  font-size: 12px; letter-spacing: 0.2em; font-weight: 800; text-transform: uppercase;
+}
+.loading-item { animation: pulse 1.5s ease-in-out infinite; color: var(--accent-cyan); }
 </style>
