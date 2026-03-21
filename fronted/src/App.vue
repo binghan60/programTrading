@@ -5,7 +5,10 @@
     <div class="bg-glow-orb orb-1" aria-hidden="true"></div>
     <div class="bg-glow-orb orb-2" aria-hidden="true"></div>
 
-    <!-- 1. 最左側：模式切換 (Nav Rail) -->
+    <!-- 手機側欄遮罩 -->
+    <div v-if="isMobile && !isCollapsed" class="sidebar-overlay" @click="isCollapsed = true" aria-hidden="true"></div>
+
+    <!-- 1. 最左側：模式切換 (Nav Rail) / 手機版底部導航 -->
     <nav class="nav-rail">
       <!-- 品牌 Logo -->
       <div class="nav-brand">
@@ -29,9 +32,6 @@
         </button>
       </div>
       <div class="nav-footer">
-        <button class="collapse-btn" @click="isCollapsed = !isCollapsed" :title="isCollapsed ? '展開側欄' : '收起側欄'">
-          <svg :class="['svg-icon', { rotated: isCollapsed }]" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="m15 18-6-6 6-6"/></svg>
-        </button>
         <div class="pulse-status online" title="系統連線中"></div>
       </div>
     </nav>
@@ -39,11 +39,33 @@
     <!-- 2. 左側控制欄（依路由顯示不同 sidebar） -->
     <transition name="slide">
       <div v-if="!isCollapsed" class="unified-sidebar">
+        <!-- Sidebar 頂端收起按鈕 -->
+        <button class="sidebar-collapse-btn" @click="isCollapsed = true" title="收起側欄">
+          <svg class="svg-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="m15 18-6-6 6-6"/></svg>
+        </button>
         <StockSidebar          v-if="route.name === 'trading'" />
         <StrategyParamsSidebar v-else-if="route.name === 'ranking'" :show-save="false" @run="strategy.triggerRankRun()" />
         <ScreenerPanel         v-else-if="route.name === 'screener'" :selected-stock="market.selectedStock" @select-stock="market.selectStock" />
       </div>
     </transition>
+
+    <!-- Sidebar 收起時的展開按鈕（貼在 nav-rail 右側） -->
+    <button v-if="isCollapsed && !isMobile" class="expand-btn" @click="isCollapsed = false" title="展開側欄">
+      <svg class="svg-icon rotated" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="m15 18-6-6 6-6"/></svg>
+    </button>
+
+    <!-- 手機版頂部列（漢堡選單） -->
+    <div class="mobile-topbar">
+      <button class="mobile-menu-btn" @click="isCollapsed = !isCollapsed" aria-label="選單">
+        <svg class="svg-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+          <line x1="3" y1="6" x2="21" y2="6"/>
+          <line x1="3" y1="12" x2="21" y2="12"/>
+          <line x1="3" y1="18" x2="21" y2="18"/>
+        </svg>
+      </button>
+      <span class="mobile-topbar-title">PT</span>
+      <div class="pulse-status online" title="系統連線中"></div>
+    </div>
 
     <!-- 3. 主內容區 -->
     <main class="main-content">
@@ -54,7 +76,7 @@
 </template>
 
 <script setup>
-import { ref } from 'vue'
+import { ref, onMounted, onBeforeUnmount } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 import { useMarketStore }   from '@/stores/market'
 import { useStrategyStore } from '@/stores/strategy'
@@ -69,6 +91,21 @@ const market   = useMarketStore()
 const strategy = useStrategyStore()
 
 const isCollapsed = ref(false)
+const isMobile    = ref(false)
+
+function checkMobile() {
+  const mobile = window.innerWidth < 768
+  if (mobile !== isMobile.value) {
+    isMobile.value = mobile
+    if (mobile) isCollapsed.value = true
+  }
+}
+
+onMounted(() => {
+  checkMobile()
+  window.addEventListener('resize', checkMobile)
+})
+onBeforeUnmount(() => window.removeEventListener('resize', checkMobile))
 
 const MODES = [
   { id: 'trading',  name: '交易終端', icon: '<path d="M3 3v18h18"/><path d="m19 9-5 5-4-4-3 3"/>' },
@@ -78,7 +115,8 @@ const MODES = [
 
 function navigate(name) {
   if (name === 'ranking') market.selectStock(null)
-  isCollapsed.value = false
+  if (!isMobile.value) isCollapsed.value = false
+  else isCollapsed.value = true  // 手機導航後自動關閉側欄
   router.push('/' + name)
 }
 </script>
@@ -278,6 +316,21 @@ body {
 @keyframes glow-pulse  { 0%,100%{opacity:0.6;transform:scale(1)} 50%{opacity:1;transform:scale(1.05)} }
 @keyframes scan-line   { 0%{top:-5%} 100%{top:105%} }
 @keyframes orbit-ring  { to{transform:rotate(360deg)} }
+
+/* ── 全域 RWD 覆寫 ──────────────────────────────────── */
+@media (max-width: 767px) {
+  body { font-size: 14px; }
+
+  /* content-header 全域縮放 */
+  .content-header {
+    height: auto; min-height: 56px;
+    flex-wrap: wrap; padding: 10px 14px; gap: 8px;
+  }
+  .stock-name     { font-size: 20px; }
+  .stock-code     { font-size: 14px; }
+  .mode-title-tech { font-size: 18px; }
+  .tech-tab-btn   { padding: 7px 14px; font-size: 13px; }
+}
 </style>
 
 <style scoped>
@@ -384,14 +437,28 @@ body {
 
 /* Nav 底部 */
 .nav-footer { margin-top: auto; display: flex; flex-direction: column; align-items: center; gap: 16px; padding-bottom: 4px; }
-.collapse-btn {
-  background: rgba(0,0,0,0.3); border: 1px solid var(--border-color);
-  color: var(--text-mut); width: 32px; height: 32px; border-radius: 8px;
-  cursor: pointer; display: flex; align-items: center; justify-content: center;
-  transition: all 0.25s;
-}
-.collapse-btn:hover { border-color: rgba(77,184,204,0.25); color: var(--accent-cyan); }
 .rotated { transform: rotate(180deg); }
+
+/* Sidebar 頂端收起按鈕 */
+.sidebar-collapse-btn {
+  position: absolute; top: 14px; right: 12px;
+  background: none; border: 1px solid transparent;
+  color: var(--text-mut); width: 28px; height: 28px; border-radius: 6px;
+  cursor: pointer; display: flex; align-items: center; justify-content: center;
+  transition: all 0.2s; z-index: 10; flex-shrink: 0;
+}
+.sidebar-collapse-btn:hover { border-color: rgba(77,184,204,0.25); color: var(--accent-cyan); background: rgba(77,184,204,0.05); }
+
+/* Nav Rail 右側展開按鈕 */
+.expand-btn {
+  position: fixed; top: 68px; left: 76px;
+  background: rgba(5,8,16,0.95); border: 1px solid var(--border-color);
+  color: var(--text-mut); width: 20px; height: 36px; border-radius: 0 6px 6px 0;
+  cursor: pointer; display: flex; align-items: center; justify-content: center;
+  transition: all 0.2s; z-index: 99;
+}
+.expand-btn:hover { border-color: rgba(77,184,204,0.3); color: var(--accent-cyan); background: rgba(77,184,204,0.05); }
+.expand-btn .svg-icon { width: 14px; height: 14px; }
 
 .pulse-status {
   width: 7px; height: 7px; border-radius: 50%;
@@ -422,5 +489,104 @@ body {
   flex: 1; display: flex; flex-direction: column; min-width: 0;
   background: transparent; height: 100vh; overflow: hidden;
   position: relative; z-index: 1;
+}
+
+/* ── 手機側欄遮罩 ─────────────────────────────────────── */
+.sidebar-overlay {
+  position: fixed; inset: 0; top: 48px; bottom: 56px;
+  background: rgba(0, 0, 0, 0.65);
+  z-index: 140;
+  backdrop-filter: blur(2px);
+  -webkit-backdrop-filter: blur(2px);
+}
+
+/* 手機版頂部列：桌面隱藏 */
+.mobile-topbar { display: none; }
+
+/* ── Tablet (768-1023px) ─────────────────────────────── */
+@media (max-width: 1023px) {
+  .unified-sidebar { width: 240px; min-width: 240px; }
+}
+
+/* ── Mobile (< 768px) ───────────────────────────────── */
+@media (max-width: 767px) {
+  /* 底部導航列 */
+  .nav-rail {
+    order: 3;
+    position: fixed; bottom: 0; left: 0; right: 0;
+    width: 100%; height: 56px; z-index: 200;
+    flex-direction: row;
+    padding: 0;
+    border-right: none;
+    border-top: 1px solid var(--border-color);
+    background: rgba(5, 8, 16, 0.97);
+  }
+  .nav-rail::after { display: none; }
+  .nav-brand { display: none; }
+
+  .nav-items {
+    flex-direction: row; flex: 1;
+    padding: 0; gap: 0;
+    justify-content: space-around; align-items: stretch;
+  }
+  .nav-btn {
+    flex: 1; height: 56px; padding: 4px 0;
+    gap: 2px; border-radius: 0;
+  }
+  .nav-btn:hover .nav-icon-wrap { transform: none; }
+  .nav-btn.active::before {
+    left: 50%; top: 0; transform: translateX(-50%);
+    width: 22px; height: 2px;
+    border-radius: 0 0 2px 2px;
+  }
+  .nav-icon-wrap { width: 32px; height: 28px; border-radius: 8px; }
+  .nav-text { font-size: 9px; }
+  .nav-footer { display: none; }
+
+  /* 手機頂部列 */
+  .mobile-topbar {
+    display: flex; align-items: center; gap: 12px;
+    position: fixed; top: 0; left: 0; right: 0;
+    height: 48px; z-index: 200;
+    background: rgba(5, 8, 16, 0.97);
+    border-bottom: 1px solid var(--border-color);
+    padding: 0 16px;
+  }
+  .mobile-menu-btn {
+    background: none; border: none;
+    color: var(--text-mut); width: 36px; height: 36px;
+    display: flex; align-items: center; justify-content: center;
+    cursor: pointer; border-radius: 8px; flex-shrink: 0;
+    transition: all 0.2s;
+  }
+  .mobile-menu-btn:hover { color: var(--accent-cyan); background: rgba(77,184,204,0.07); }
+  .mobile-topbar-title {
+    font-size: 13px; font-weight: 900; letter-spacing: 0.18em;
+    color: var(--accent-cyan); opacity: 0.8;
+    font-family: 'JetBrains Mono', monospace; flex: 1;
+  }
+
+  /* 側欄改為固定 overlay，從頂部列下方開始 */
+  .unified-sidebar {
+    position: fixed !important;
+    top: 48px; left: 0;
+    height: calc(100vh - 48px - 56px) !important;
+    width: 280px !important; min-width: 280px !important;
+    z-index: 150;
+  }
+
+  /* 手機版 slide 動畫：改用寬度裁切（從左滑入效果） */
+  .slide-enter-from,
+  .slide-leave-to {
+    width: 0 !important; min-width: 0 !important; opacity: 0;
+  }
+
+  /* 主內容全寬，上留頂部列、下留底部導航空間 */
+  .app-container { flex-direction: row; }
+  .main-content {
+    height: calc(100vh - 48px - 56px);
+    margin-top: 48px;
+    width: 100%;
+  }
 }
 </style>

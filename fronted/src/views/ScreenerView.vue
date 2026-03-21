@@ -64,4 +64,11 @@ const market = useMarketStore()
   opacity: 0.75; position: relative; z-index: 1;
 }
 .sep { color: var(--text-dim); margin: 0 6px; }
+
+@media (max-width: 767px) {
+  :deep(.content-header) { height: auto; min-height: 56px; padding: 10px 14px; }
+  :deep(.stock-name)      { font-size: 20px; }
+  :deep(.stock-code)      { font-size: 14px; }
+  :deep(.mode-title-tech) { font-size: 18px; }
+}
 </style>

@@ -94,4 +94,18 @@ const activeTab = ref('K線圖表')
   color: var(--accent-cyan); background: rgba(77,184,204,0.06);
 }
 .es-badge.muted { color: var(--text-dim); border-color: var(--border-color); background: transparent; }
+
+/* ── Mobile (< 768px) ───────────────────────────────── */
+@media (max-width: 767px) {
+  /* header 改為垂直堆疊 */
+  :deep(.content-header) {
+    height: auto; min-height: 56px;
+    flex-wrap: wrap; padding: 10px 14px; gap: 8px;
+  }
+  :deep(.header-left) { gap: 8px; }
+  :deep(.stock-name)  { font-size: 20px; }
+  :deep(.stock-code)  { font-size: 14px; }
+  :deep(.mode-title-tech) { font-size: 18px; }
+  :deep(.tech-tab-btn)    { padding: 7px 16px; font-size: 13px; }
+}
 </style>

@@ -2,7 +2,7 @@
   <div class="bt-root tech-root">
 
     <!-- ── 左側設定欄 ── -->
-    <aside class="bt-sidebar">
+    <aside v-show="btSidebarOpen" class="bt-sidebar">
       <StrategyParamsSidebar :show-save="true" @run="runBacktest" />
 
       <button class="btn-run-bt" :disabled="loading || !store.selectedId" @click="runBacktest">
@@ -14,6 +14,17 @@
 
     <!-- ── 右側結果區 ── -->
     <div class="bt-main">
+
+      <!-- 手機版：設定面板開關按鈕 -->
+      <div class="mobile-sidebar-toggle">
+        <button class="toggle-btn" @click="btSidebarOpen = !btSidebarOpen">
+          <svg class="btn-svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <path d="M12 3H5a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/>
+            <path d="M9 9h6M9 13h4"/>
+          </svg>
+          {{ btSidebarOpen ? '收起設定' : '展開設定' }}
+        </button>
+      </div>
 
       <div v-if="!result && !loading" class="empty-hint-tech">
         <div class="empty-gfx-small"></div>
@@ -145,6 +156,10 @@ const store   = useStrategyStore()
 const loading = ref(false)
 const result  = ref(null)
 
+// 手機版：側欄預設收起
+const btSidebarOpen = ref(true)
+function syncBtSidebar() { btSidebarOpen.value = window.innerWidth >= 768 }
+
 // 台股配色
 const COLORS = {
   up:   '#f23645',
@@ -159,7 +174,7 @@ const hasAdvanced = computed(() => {
   return m && (m.sharpe_ratio != null || m.profit_factor != null || m.annual_return != null)
 })
 
-onMounted(() => store.init())
+onMounted(() => { store.init(); syncBtSidebar(); window.addEventListener('resize', syncBtSidebar) })
 
 async function runBacktest() {
   if (!props.code || !store.selectedId || loading.value) return
@@ -266,6 +281,7 @@ watch(() => props.code, () => {
 onBeforeUnmount(() => {
   destroyCharts()
   if (abortController) abortController.abort()
+  window.removeEventListener('resize', syncBtSidebar)
 })
 
 function fmtNum(n) {
@@ -398,9 +414,9 @@ function fmtNum(n) {
   background: rgba(10, 14, 24, 0.98);
   color: var(--text-mut); padding: 12px 16px; text-align: left;
   font-weight: 800; font-size: 11px; letter-spacing: 0.1em; text-transform: uppercase;
-  border-bottom: 1px solid var(--border-color); z-index: 1;
+  border-bottom: 1px solid var(--border-color); z-index: 1; white-space: nowrap;
 }
-.t-table td { padding: 12px 16px; border-bottom: 1px solid rgba(255,255,255,0.02); }
+.t-table td { padding: 12px 16px; border-bottom: 1px solid rgba(255,255,255,0.02); white-space: nowrap; }
 .t-table tr:hover td { background: rgba(255,255,255,0.02); }
 
 .buy-row  td { background: rgba(255, 71, 87, 0.02); }
@@ -415,4 +431,53 @@ function fmtNum(n) {
 .t-date { font-family: 'JetBrains Mono', monospace; font-size: 13px; color: var(--text-mut); }
 .t-num  { font-family: 'JetBrains Mono', monospace; text-align: right; font-weight: 600; }
 .t-reason { color: var(--text-mut); font-size: 12px; }
+
+/* ── 手機版展開設定按鈕（桌面隱藏） ─────────────────────── */
+.mobile-sidebar-toggle { display: none; }
+.toggle-btn {
+  display: flex; align-items: center; gap: 8px;
+  background: rgba(0,0,0,0.3); border: 1px solid var(--border-color);
+  color: var(--accent-cyan); padding: 10px 18px; font-size: 13px;
+  font-weight: 700; cursor: pointer; border-radius: 0;
+  width: 100%; letter-spacing: 0.05em; transition: background 0.2s;
+}
+.toggle-btn:hover { background: rgba(77,184,204,0.06); }
+
+/* ── Tablet (768-1023px) ─────────────────────────────── */
+@media (max-width: 1023px) {
+  .bt-sidebar { width: 240px; min-width: 240px; }
+  .metrics-grid { grid-template-columns: repeat(3, 1fr); }
+}
+
+/* ── Mobile (< 768px) ───────────────────────────────── */
+@media (max-width: 767px) {
+  .bt-root { flex-direction: column; }
+
+  .bt-sidebar {
+    width: 100%; min-width: 0;
+    max-height: 60vh; overflow-y: auto;
+    border-right: none;
+    border-bottom: 1px solid var(--border-color);
+    flex-shrink: 0;
+  }
+
+  .mobile-sidebar-toggle { display: block; border-bottom: 1px solid var(--border-color); }
+
+  .bt-main { flex: 1; min-height: 0; }
+
+  .metrics-grid { grid-template-columns: repeat(2, 1fr); }
+  .m-val { font-size: 18px; }
+
+  .adv-metrics-bar { gap: 16px; padding: 10px 14px; flex-wrap: wrap; }
+  .am-item { flex-basis: calc(50% - 8px); }
+
+  .charts-container { padding: 10px; gap: 10px; }
+  .canvas-box { height: 220px; }
+  .canvas-box-sm { height: 100px; }
+
+  .trades-section { margin: 0 10px 24px; }
+  .trades-table-wrap { overflow-x: auto; }
+  .t-table { min-width: 620px; }
+  .t-table th, .t-table td { padding: 10px 10px; font-size: 12px; }
+}
 </style>
