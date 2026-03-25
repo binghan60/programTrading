@@ -59,6 +59,8 @@ let loadAbortCtrl = null
 
 // 連續整數索引 → 實際日期，用來消除週末/假日空洞
 let dateIndexMap = []
+// 目前可視範圍的左邊界 index，用於確保左緣一定顯示年份
+let visibleFromIndex = 0
 
 function initChart() {
   chart = createChart(chartEl.value, {
@@ -86,7 +88,9 @@ function initChart() {
         const cur = dateIndexMap[i]
         if (!cur) return ''
         const prev = i > 0 ? dateIndexMap[i - 1] : null
-        if (!prev || prev.slice(0, 4) !== cur.slice(0, 4)) return cur.slice(0, 4)
+        // 左緣附近（±2）強制顯示年份，避免可視範圍不從 index 0 起始時年份消失
+        const isNearLeftEdge = i >= visibleFromIndex - 1 && i <= visibleFromIndex + 2
+        if (isNearLeftEdge || !prev || prev.slice(0, 4) !== cur.slice(0, 4)) return cur.slice(0, 4)
         if (prev.slice(5, 7) !== cur.slice(5, 7))          return cur.slice(5, 7) + '/' + cur.slice(2, 4)
         return cur.slice(5, 7) + '/' + cur.slice(8)
       },
@@ -112,6 +116,11 @@ function initChart() {
   chart.priceScale('volume').applyOptions({
     scaleMargins: { top: 0.8, bottom: 0 },
   })
+
+  // 使用者拖曳/縮放時同步更新左邊界，確保年份標籤正確顯示
+  chart.timeScale().subscribeVisibleLogicalRangeChange((range) => {
+    if (range) visibleFromIndex = Math.floor(range.from)
+  })
 }
 
 async function loadData() {
@@ -133,6 +142,10 @@ async function loadData() {
 
   loading.value = true
   empty.value = false
+  // 立刻清空舊資料，避免切換股票時短暫顯示前一支股票的年份標籤
+  dateIndexMap = []
+  candleSeries.setData([])
+  volSeries.setData([])
 
   const fmt   = d => d.toISOString().slice(0, 10)
   const start = fmt(new Date(2020, 2, 2))
@@ -166,6 +179,7 @@ function applyRange(label) {
 
   const range = RANGES.find(r => r.label === label)
   if (range.months >= 999) {
+    visibleFromIndex = 0
     chart.timeScale().fitContent()
     return
   }
@@ -174,9 +188,10 @@ function applyRange(label) {
   startDate.setMonth(startDate.getMonth() - range.months)
   const startStr  = startDate.toISOString().slice(0, 10)
   const fromIndex = dateIndexMap.findIndex(d => d >= startStr)
+  visibleFromIndex = fromIndex === -1 ? 0 : fromIndex
 
   chart.timeScale().setVisibleLogicalRange({
-    from: fromIndex === -1 ? 0 : fromIndex,
+    from: visibleFromIndex,
     to:   total - 1 + 10,
   })
 }
